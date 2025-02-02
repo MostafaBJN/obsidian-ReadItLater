@@ -24,6 +24,7 @@ interface YoutubeNoteData {
     channelName: string;
     channelURL: string;
     extra: YoutubeVideo;
+    videoKeywords: string;
 }
 
 interface YoutubeVideo {
@@ -79,6 +80,15 @@ class YoutubeParser extends Parser {
                     Accept: 'application/json',
                 },
             });
+
+            //Just to get 'keywords' from it
+            const response = await request({
+                method: 'GET',
+                url,
+                headers: { ...desktopBrowserUserAgent },
+            });
+            const videoHTML = new DOMParser().parseFromString(response, 'text/html');
+            const keywords = (videoHTML.querySelector("meta[name='keywords']") as HTMLMetaElement).content;
 
             const videoJsonResponse = JSON.parse(videoApiResponse);
             if (videoJsonResponse.items.length === 0) {
@@ -136,6 +146,7 @@ class YoutubeParser extends Parser {
                     },
                     chapters: chapters,
                 },
+                videoKeywords: keywords,
             };
         } catch (error) {
             handleError(error, 'Unable to parse Youtube API response.');
@@ -156,6 +167,8 @@ class YoutubeParser extends Parser {
             const jsonData = typeof declaration !== 'undefined' ? JSON.parse(declaration.value) : {};
 
             const videoSchemaElement = videoHTML.querySelector('[itemtype*="http://schema.org/VideoObject"]');
+
+            const keywords = (videoHTML.querySelector("meta[name='keywords']") as HTMLMetaElement).content;
 
             if (videoSchemaElement === null) {
                 throw new Error('Unable to find Schema.org element in HTML.');
@@ -202,6 +215,7 @@ class YoutubeParser extends Parser {
                 channelURL: personSchemaElement?.querySelector('[itemprop="url"]')?.getAttribute('href') ?? '',
                 channelName: personSchemaElement?.querySelector('[itemprop="name"]')?.getAttribute('content') ?? '',
                 extra: null,
+                videoKeywords: keywords,
             };
         } catch (error) {
             handleError(error, 'Unable to parse Youtube schema from DOM.');

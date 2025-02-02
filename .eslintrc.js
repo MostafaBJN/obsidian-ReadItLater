@@ -24,7 +24,7 @@ module.exports = {
     },
     plugins: ['@typescript-eslint', 'import'],
     rules: {
-        'linebreak-style': ['error', 'unix'],
+        'linebreak-style': ['error', process.platform === 'win32' ? 'windows' : 'unix'],
         quotes: ['error', 'single', { avoidEscape: true }],
         '@typescript-eslint/no-unused-vars': 0, // Configured in tsconfig instead.
         'no-unused-vars': 0, // Configured in tsconfig instead.
@@ -37,6 +37,7 @@ module.exports = {
                 useTabs: false,
                 singleQuote: true,
                 bracketSpacing: true,
+                endOfLine: 'auto',
             },
         ],
         semi: ['error', 'always'],
